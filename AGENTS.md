@@ -48,16 +48,16 @@ Data-driven quest system for Unreal Engine.
 - Quest ID typos — strings fail silently
 - Not handling quest dependencies properly
 
-See `.claude/patterns.md` for implementation patterns.
+See `.agents/patterns.md` for implementation patterns.
 
 ## Integration Points
 
 - Integrates with: SPUD (persistence), FlowGraph (SUQSFlow)
-- See `.claude/plugin-integration.md` for cross-plugin dependency matrix
+- See `.agents/plugin-integration.md` for cross-plugin dependency matrix
 
 ## Human Review Required
 
 - Changes to `USuqsProgression` public API
 - Changes to `FSuqsQuest`, `FSuqsObjective`, `FSuqsTask` structures
 - Changes to quest JSON schema or save data format
-- See `.claude/human-review-checklist.md` for full list
+- See `.agents/human-review-checklist.md` for full list
