@@ -1,63 +1,36 @@
 # SUQS
 
-Data-driven quest system for Unreal Engine.
+Steve's Unreal Quest System: data-driven quests defined in DataTables. Third-party library (Ji-Rath fork of sinbad/SUQS, git submodule). **Prefer using it over modifying it.** Modules: `SUQS` (Runtime), `SUQSTest` (automation tests, `Automation RunTests SUQSTest`). Log category: `LogSUQS`.
 
-## Capabilities
+## Usage in HorrorGame
 
-| Capability | Description |
-|------------|-------------|
-| **Data-Driven Quests** | Defined in data tables or JSON with schema validation |
-| **Quest Branching** | Predefined branches within quests, quest dependencies |
-| **Task Progression** | Tasks track progress with target numbers and time limits |
-| **Objective Groups** | Sequential, flexible, or "N of M" completion |
-| **Event System** | Callbacks and query API for quest state changes |
-| **Multiplayer Support** | `USuqsGameStateComponent` for network replication |
-| **Save Integration** | Works with SPUD for quest persistence |
+- `Plugins/HorrorFeatures/Content/Systems/BP_HorrorGameState` owns a `USuqsGameStateComponent` (holds the `USuqsProgression`) and a quest DataTable variable.
+- Quest state is saved via `USuqsFlowSaveObject` (SUQSFlow) inside the SPUD save — don't add another save path.
+- `WBP_HorrorGameUI` displays quests through `FSuqsProgressView` / `USuqsProgressViewHelpers`.
+- `Flow_MainStory` does not drive quests yet; SUQSFlow nodes are available for that.
 
-## Key Classes
+## Key Types (`Source/SUQS/Public/`)
 
-| Class | Purpose |
-|-------|---------|
-| `USuqsProgression` | Main class tracking quest state |
-| `USuqsQuest` | Quest definition data asset |
-| `USuqsQuestState` | Runtime quest state |
-| `USuqsObjectiveState` | Runtime objective state |
-| `USuqsTaskState` | Runtime task state |
-| `USuqsWaypointComponent` | Waypoint for quest navigation |
-| `USuqsGameStateComponent` | Multiplayer replication component |
-| `USuqsProgressView` | Read-only view for UI in multiplayer |
-
-## Key Structs & Interfaces
-
-| Name | Type | Purpose |
-|------|------|---------|
-| `FSuqsQuest` | Struct | Quest definition |
-| `FSuqsObjective` | Struct | Objective definition |
-| `FSuqsTask` | Struct | Task definition |
-| `FSuqsProgressionEventDetails` | Struct | Event details for callbacks |
-| `ESuqsQuestStatus` | Enum | Inactive, Active, Completed, Failed |
-| `ESuqsTaskStatus` | Enum | Task status values |
-| `ISuqsParameterProvider` | Interface | `GetNamedFormatParameter()` for text substitution |
+| Type | Purpose |
+|---|---|
+| `FSuqsQuest` / `FSuqsObjective` / `FSuqsTask` | Quest definition (DataTable row type `FSuqsQuest`) |
+| `USuqsProgression` | All quest state; `InitWithQuestDataTables`, `AcceptQuest`, `ProgressTask`/`CompleteTask`, events, `SaveToData`/`LoadFromData` (`FSuqsSaveData`) |
+| `USuqsQuestState` / `USuqsObjectiveState` / `USuqsTaskState` | Runtime state objects |
+| `ESuqsQuestStatus` (Incomplete/Completed/Failed), `ESuqsTaskStatus` (NotStarted/InProgress/…) | Status enums |
+| `USuqsGameStateComponent` | Owns + replicates progression via `FSuqsProgressView` |
+| `FSuqsProgressView` + `USuqsProgressViewHelpers` | Read-only, replicated quest view for UI |
+| `FSuqsProgressionEventDetails` | Payload for progression events |
+| `ISuqsParameterProvider` | `GetQuestParameters(QuestID, TaskID, USuqsNamedFormatParams*)` for `{Param}` text substitution |
+| `USuqsWaypointComponent` | Marks quest waypoints for a task |
 
 ## Common Pitfalls
 
-- Not calling `InitWithQuestDataTables()` before use
-- Multiple `USuqsProgression` instances per player — breaks state
-- Direct UI binding in multiplayer — use `USuqsProgressView` instead
-- Forgetting to save/load `USuqsProgression` state
-- Quest ID typos — strings fail silently
-- Not handling quest dependencies properly
-
-See `.agents/patterns.md` for implementation patterns.
-
-## Integration Points
-
-- Integrates with: SPUD (persistence), FlowGraph (SUQSFlow)
-- See `.agents/plugin-integration.md` for cross-plugin dependency matrix
+- Call `InitWithQuestDataTables()` before using a progression
+- Quest/task IDs are `FName`s — typos fail silently
+- UI should read the progress view, not mutate `USuqsProgression` directly
 
 ## Human Review Required
 
-- Changes to `USuqsProgression` public API
-- Changes to `FSuqsQuest`, `FSuqsObjective`, `FSuqsTask` structures
-- Changes to quest JSON schema or save data format
-- See `.agents/human-review-checklist.md` for full list
+- Any change to SUQS source (fork of a third-party library)
+- Changes to `USuqsProgression` public API, `FSuqsQuest`/`FSuqsObjective`/`FSuqsTask`, or `FSuqsSaveData`
+- See root `.agents/human-review-checklist.md`
